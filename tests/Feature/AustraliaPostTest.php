@@ -345,8 +345,8 @@ it('can handle a 429 error response', function () {
                 'message' => 'Too many requests',
                 'error_code' => 'API_002',
                 'error_name' => 'Too many requests',
-            ]
-        ]
+            ],
+        ],
     ];
 
     $httpMockHandler = new MockHandler([
@@ -378,8 +378,8 @@ it('can handle a 200 response with 429 payload', function () {
                 'message' => 'Too many requests',
                 'error_code' => 'API_002',
                 'error_name' => 'Too many requests',
-            ]
-        ]
+            ],
+        ],
     ];
 
     $httpMockHandler = new MockHandler([
@@ -411,8 +411,8 @@ it('can handle a 403 error response', function () {
                 'message' => 'Undocumented unauthorised error',
                 'error_code' => 'API_000',
                 'error_name' => 'Unauthorised request',
-            ]
-        ]
+            ],
+        ],
     ];
 
     $httpMockHandler = new MockHandler([
