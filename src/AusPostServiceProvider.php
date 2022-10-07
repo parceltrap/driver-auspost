@@ -23,7 +23,13 @@ class AusPostServiceProvider extends ServiceProvider
             return new AusPost(
                 /** @phpstan-ignore-next-line */
                 apiKey: (string) $config->get('parceltrap.drivers.auspost.api_key'),
+                /** @phpstan-ignore-next-line */
+                password: (string) $config->get('parceltrap.drivers.auspost.password'),
+                /** @phpstan-ignore-next-line */
+                accountNumber: (string) $config->get('parceltrap.drivers.auspost.account_number'),
             );
         });
     }
 }
+
+
