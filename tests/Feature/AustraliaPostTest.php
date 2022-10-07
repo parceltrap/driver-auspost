@@ -12,6 +12,26 @@ use ParcelTrap\Enums\Status;
 use ParcelTrap\ParcelTrap;
 use ParcelTrap\AusPost\AusPost;
 
+function getMockAusPost($app, array $trackingDetails)
+{
+    $httpMockHandler = new MockHandler([
+        new Response(200, ['Content-Type' => 'application/json'], json_encode($trackingDetails)),
+    ]);
+
+    $handlerStack = HandlerStack::create($httpMockHandler);
+
+    $httpClient = new Client([
+        'handler' => $handlerStack,
+    ]);
+
+    $app->make(Factory::class)->extend(AusPost::IDENTIFIER, fn () => new AusPost(
+        apiKey: 'abcdefg',
+        password: 'test',
+        accountNumber: 'abc123',
+        client: $httpClient,
+    ));
+}
+
 it('can add the AusPost driver to ParcelTrap', function () {
     /** @var ParcelTrap $client */
     $client = $this->app->make(Factory::class);
@@ -45,22 +65,7 @@ it('can call `find` on the AusPost driver and handle invalid tracking ID respons
         ],
     ];
 
-    $httpMockHandler = new MockHandler([
-        new Response(200, ['Content-Type' => 'application/json'], json_encode($trackingDetails)),
-    ]);
-
-    $handlerStack = HandlerStack::create($httpMockHandler);
-
-    $httpClient = new Client([
-        'handler' => $handlerStack,
-    ]);
-
-    $this->app->make(Factory::class)->extend(AusPost::IDENTIFIER, fn () => new AusPost(
-        apiKey: 'abcdefg',
-        password: 'test',
-        accountNumber: 'abc123',
-        client: $httpClient,
-    ));
+    getMockAusPost($this->app, $trackingDetails);
 
     expect($this->app->make(Factory::class)->driver(AusPost::IDENTIFIER)->find('7XX1000'))
         ->toBeInstanceOf(TrackingDetails::class)
@@ -125,22 +130,7 @@ it('can call `find` on the AusPost driver and handle a successful response', fun
         ],
     ];
 
-    $httpMockHandler = new MockHandler([
-        new Response(200, ['Content-Type' => 'application/json'], json_encode($trackingDetails)),
-    ]);
-
-    $handlerStack = HandlerStack::create($httpMockHandler);
-
-    $httpClient = new Client([
-        'handler' => $handlerStack,
-    ]);
-
-    $this->app->make(Factory::class)->extend(AusPost::IDENTIFIER, fn () => new AusPost(
-        apiKey: 'abcdefg',
-        password: 'test',
-        accountNumber: 'abc123',
-        client: $httpClient,
-    ));
+    getMockAusPost($this->app, $trackingDetails);
 
     expect($this->app->make(Factory::class)->driver(AusPost::IDENTIFIER)->find('7XX1000634011427'))
         ->toBeInstanceOf(TrackingDetails::class)
@@ -148,6 +138,202 @@ it('can call `find` on the AusPost driver and handle a successful response', fun
         ->status->toEqual(Status::Delivered)
         ->status->description()->toBe('Delivered')
         ->summary->toBe('The item or items in the shipment have been delivered.')
+        ->estimatedDelivery->toBeNull()
+        ->raw->toBe($trackingDetails);
+});
+
+it('can call `find` on the AusPost driver and handle a consignment response', function () {
+    $trackingDetails = [
+        'tracking_results' => [
+            [
+                'tracking_id' => '6XXX12345678',
+                'consignment' => [
+                    'events' => [
+                        [
+                            'location' => 'MEL',
+                            'description' => 'Item Delivered',
+                            'date' => '2017-09-18T14:35:07+10:00'
+                        ],
+                        [
+                            'location' => 'MEL',
+                            'description' => 'On Board for Delivery',
+                            'date' => '2017-09-18T09:50:05+10:00'
+                        ]
+                    ],
+                    'status' => 'Delivered in Full'
+                ],
+                'trackable_items' => [
+                    [
+                        'article_id' => '6XXX12345678EXP00001',
+                        'product_type' => 'EXP',
+                        'events' => [
+                            [
+                                'location' => 'MEL',
+                                'description' => 'On Board for Delivery',
+                                'date' => '2017-09-18T09:16:01+10:00'
+                            ],
+                            [
+                                'location' => 'TRA',
+                                'description' => 'Freight Handling',
+                                'date' => '2017-09-15T16:33:29+10:00'
+                            ],
+                            [
+                                'location' => 'TRA',
+                                'description' => 'Picked Up',
+                                'date' => '2017-09-15T09:04:05+10:00'
+                            ]
+                        ],
+                        'status' => 'Item Delivered'
+                    ]
+                ]
+            ]
+        ]
+    ];
+
+    getMockAusPost($this->app, $trackingDetails);
+
+    expect($this->app->make(Factory::class)->driver(AusPost::IDENTIFIER)->find('6XXX12345678'))
+        ->toBeInstanceOf(TrackingDetails::class)
+        ->identifier->toBe('6XXX12345678')
+        ->status->toEqual(Status::Delivered)
+        ->status->description()->toBe('Delivered')
+        ->summary->toBe('All freight items in the consignment have been delivered.')
+        ->estimatedDelivery->toBeNull()
+        ->raw->toBe($trackingDetails);
+});
+
+
+it('can call `find` on the AusPost driver and handle a nested response', function () {
+    $trackingDetails = [
+        'tracking_results' => [
+            [
+                'tracking_id' => '33XXX0123456',
+                'trackable_items' => [
+                    [
+                        'consignment_id' => '33XXX0123456',
+                        'number_of_items' => 1,
+                        'items' => [
+                            [
+                                'article_id' => '33XXX012345601000931502',
+                                'product_type' => 'Parcel Post',
+                                'events' => [
+                                    [
+                                        'location' => 'LIGHTSVIEW SA',
+                                        'description' => 'Delivered - Left in a safe place',
+                                        'date' => '2020-12-29T11:04:08+11:00'
+                                    ],
+                                    [
+                                        'location' => 'REGENCY PARK SA',
+                                        'description' => 'Onboard for delivery',
+                                        'date' => '2020-12-29T07:36:39+11:00'
+                                    ],
+                                    [
+                                        'location' => 'ADELAIDE (AU)',
+                                        'description' => 'Received by Australia Post for transportation to processing facility',
+                                        'date' => '2020-12-22T17:52:00+11:00'
+                                    ],
+                                    [
+                                        'description' => 'Shipping information approved by Australia Post',
+                                        'date' => '2020-12-16T03:15:58+11:00'
+                                    ],
+                                    [
+                                        'description' => 'Shipping information received by Australia Post',
+                                        'date' => '2020-12-15T23:59:32+11:00'
+                                    ]
+                                ],
+                                'status' => 'Delivered'
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ];
+
+    getMockAusPost($this->app, $trackingDetails);
+
+    expect($this->app->make(Factory::class)->driver(AusPost::IDENTIFIER)->find('33XXX0123456'))
+        ->toBeInstanceOf(TrackingDetails::class)
+        ->identifier->toBe('33XXX0123456')
+        ->status->toEqual(Status::Delivered)
+        ->status->description()->toBe('Delivered')
+        ->summary->toBe('The item or items in the shipment have been delivered.')
+        ->estimatedDelivery->toBeNull()
+        ->raw->toBe($trackingDetails);
+});
+
+
+it('can call `find` on the AusPost driver and handle another response format cause it changes a lot for some reason', function () {
+    $trackingDetails = [
+        'tracking_results' => [
+            [
+                'tracking_id' => 'I3XX00123456',
+                'consignment' => [
+                    'events' => [
+                        [
+                            'location' => 'PER',
+                            'description' => 'Delivered',
+                            'date' => '2020-12-17T11:58:17+11:00'
+                        ],
+                        [
+                            'location' => 'PER',
+                            'description' => 'On Board for Delivery',
+                            'date' => '2020-12-17T09:24:25+11:00'
+                        ],
+                        [
+                            'location' => 'PER',
+                            'description' => 'Scanned in Transit',
+                            'date' => '2020-12-16T17:23:30+11:00'
+                        ]
+                    ],
+                    'status' => 'Delivered in Full'
+                ],
+                'trackable_items' => [
+                    [
+                        'article_id' => 'I3XX00123456FPP00001',
+                        'product_type' => 'FPP',
+                        'events' => [
+                            [
+                                'location' => 'PER',
+                                'description' => 'On Board for Delivery',
+                                'date' => '2020-12-17T09:24:24+11:00'
+                            ],
+                            [
+                                'location' => 'PER',
+                                'description' => 'Freight Handling',
+                                'date' => '2020-12-17T09:15:40+11:00'
+                            ],
+                            [
+                                'location' => 'PER',
+                                'description' => 'Freight Handling',
+                                'date' => '2020-12-17T02:35:36+11:00'
+                            ],
+                            [
+                                'location' => 'PER',
+                                'description' => 'Freight Handling',
+                                'date' => '2020-12-16T17:23:30+11:00'
+                            ],
+                            [
+                                'location' => 'PER',
+                                'description' => 'Picked Up',
+                                'date' => '2020-12-16T13:13:31+11:00'
+                            ]
+                        ],
+                        'status' => 'Item Delivered'
+                    ]
+                ]
+            ]
+        ]
+    ];
+
+    getMockAusPost($this->app, $trackingDetails);
+
+    expect($this->app->make(Factory::class)->driver(AusPost::IDENTIFIER)->find('I3XX00123456'))
+        ->toBeInstanceOf(TrackingDetails::class)
+        ->identifier->toBe('I3XX00123456')
+        ->status->toEqual(Status::Delivered)
+        ->status->description()->toBe('Delivered')
+        ->summary->toBe('All freight items in the consignment have been delivered.')
         ->estimatedDelivery->toBeNull()
         ->raw->toBe($trackingDetails);
 });

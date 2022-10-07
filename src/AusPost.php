@@ -39,7 +39,15 @@ class AusPost implements Driver
         $result = $json['tracking_results'][0] ?? null;
 
         // Extract the status and error codes where applicable
-        $statusCode = strtolower($result['status'] ?? 'unknown');
+        $statusCode = (
+            $result['status'] ?? (
+                $result['consignment']['status'] ?? (
+                    $result['trackable_items'][0]['items'][0]['status'] ?? 'unknown'
+                )
+            )
+        );
+
+        $statusCode = strtolower($statusCode);
         $errorCode = strtolower($result['errors'][0]['code'] ?? 'unknown');
 
         // Convert the status code to a ParcelTrap status
@@ -78,6 +86,42 @@ class AusPost implements Driver
             'held by courier' => Status::In_Transit,
             'cannot be delivered' => Status::Failure,
             'track items for detailed delivery information' => Status::Unknown,
+
+            'at delivery depot' => Status::Pre_Transit,
+            'booked in' => Status::Pending,
+            'confirmed' => Status::Pending,
+            'deleted' => Status::Cancelled,
+            'delivered in full' => Status::Delivered,
+            'delivered' => Status::Delivered,
+            'final shortage' => Status::Delivered,
+            'incomplete' => Status::Pre_Transit,
+            'in transit' => Status::In_Transit,
+            'on board for delivery' => null,
+            'partial delivery' => Status::Delivered,
+            'partial pickup' => Status::In_Transit,
+            'picked up' => Status::In_Transit,
+            're-consigned' => Status::Pre_Transit,
+            'to be re-delivered' => Status::In_Transit,
+            'ready for pickup' => Status::Pre_Transit,
+            'unconfirmed' => Status::Pre_Transit,
+            'unsuccessful delivery' => Status::Failure,
+
+            'at delivery depot' => Status::Pre_Transit,
+            'booked in' => Status::Pending,
+            'confirmed' => Status::Pre_Transit,
+            'deleted' => Status::Cancelled,
+            'item delivered' => Status::Delivered,
+            'final shortage' => Status::Failure,
+            'incomplete' => Status::Pre_Transit,
+            'in transit' => Status::In_Transit,
+            'on board for delivery' => Status::In_Transit,
+            'picked up' => Status::In_Transit,
+            're-consigned' => Status::In_Transit,
+            'to be re-delivered' => Status::In_Transit,
+            'ready for pickup' => Status::Pre_Transit,
+            'unconfirmed' => Status::Pre_Transit,
+            'unsuccessful delivery' => Status::Failure,
+
             default => Status::Unknown,
         };
     }
@@ -98,6 +142,41 @@ class AusPost implements Driver
             'held by courier' => 'The item or items in the shipment have been held by the courier.',
             'cannot be delivered' => 'The item or items in the shipment cannot be delivered as addressed.',
             'track items for detailed delivery information' => 'A shipment level delivery summary cannot be determined, as the items in the shipment are at differing delivery statuses. Track the individual items in the shipment for detailed delivery information.',
+
+            'at delivery depot' => 'Consignment is at carrier depot closest to receiver.',
+            'booked in' => 'Consignment is at carrier depot closest to receiver.',
+            'confirmed' => 'Sender has provided consignment information to carrier in preparation for shipment.',
+            'deleted' => 'Sender has deleted consignment information prepared earlier in preparation for shipment.',
+            'delivered in full' => 'All freight items in the consignment have been delivered.',
+            'delivered' => 'Some or all freight items in the consignment have been delivered and Proof of Delivery is available.',
+            'final shortage' => 'Delivery is complete but not all items were able to be delivered..',
+            'incomplete' => 'Sender has partially completed consignment information for carrier in preparation for shipment.',
+            'in transit' => 'Consignment is in transit between two carrier depots (initial/intermediate/final).',
+            'on board for delivery' => 'Consignment is in a local delivery vehicle.',
+            'partial delivery' => 'Some but not all freight items in the consignment have been delivered.',
+            'partial pickup' => 'Some but not all items in the consignment were scanned by carrier on pickup from sender.',
+            'picked up' => 'Carrier has picked up from the sender all freight items in the consignment.',
+            're-consigned' => 'Consignment information incorrect or incomplete. Corrected information supplied in a new consignment..',
+            'to be re-delivered' => 'Consignment has been returned to local carrier depot as undeliverable: to be re-delivered on a following day.',
+            'ready for pickup' => 'Consignment awaiting pickup by carrier.',
+            'unconfirmed' => 'Sender has completed consignment information for carrier in preparation for shipment but has not yet finalised the consignment.',
+            'unsuccessful delivery' => 'Consignment could not be delivered.',
+
+            'at delivery depot' => 'Freight item is at carrier depot closest to receiver.',
+            'booked in' => 'Freight item held at carrier depot closest to receiver until a date and time authorised by receiver.',
+            'confirmed' => 'Sender has provided consignment information to carrier in preparation for shipment.',
+            'deleted' => 'Sender has deleted consignment information prepared earlier in preparation for shipment.',
+            'item delivered' => 'Freight item has been delivered.',
+            'final shortage' => 'The freight item was not able to be delivered and delivery of the consignment is complete..',
+            'incomplete' => 'Sender has partially completed consignment information for carrier in preparation for shipment.',
+            'in transit' => 'Freight item is in transit between two carrier depots (initial/intermediate/final).',
+            'on board for delivery' => 'Freight item is in a local delivery vehicle.',
+            'picked up' => 'Carrier has picked up freight item from the sender.',
+            're-consigned' => 'Consignment information was incorrect or incomplete. Corrected information supplied in a new consignment..',
+            'to be re-delivered' => 'Freight item has been returned to local carrier depot as undeliverable: to be re-delivered on a following day.',
+            'ready for pickup' => 'Freight item awaiting pickup by carrier.',
+            'unconfirmed' => 'Sender has completed consignment information for carrier in preparation for shipment but has not yet finalised the consignment.',
+            'unsuccessful delivery' => 'Freight item could not be delivered.',
 
             default => 'An unknown Australia Post status',
         };
