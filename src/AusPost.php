@@ -34,6 +34,7 @@ class AusPost implements Driver
     {
         // find() only supports returning a single TrackingDetails object so we can only search for one
         if (str_contains($identifier, ',')) {
+            /** @phpstan-ignore-next-line */
             $identifier = substr($identifier, 0, strpos($identifier, ','));
         }
 
@@ -133,7 +134,7 @@ class AusPost implements Driver
             'final shortage' => Status::Delivered,
             'incomplete' => Status::Pre_Transit,
             'in transit' => Status::In_Transit,
-            'on board for delivery' => null,
+            'on board for delivery' => Status::In_Transit,
             'partial delivery' => Status::Delivered,
             'partial pickup' => Status::In_Transit,
             'picked up' => Status::In_Transit,
