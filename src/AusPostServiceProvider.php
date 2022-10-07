@@ -31,5 +31,3 @@ class AusPostServiceProvider extends ServiceProvider
         });
     }
 }
-
-
