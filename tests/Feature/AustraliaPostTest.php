@@ -6,11 +6,11 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
+use ParcelTrap\AusPost\AusPost;
 use ParcelTrap\Contracts\Factory;
 use ParcelTrap\DTOs\TrackingDetails;
 use ParcelTrap\Enums\Status;
 use ParcelTrap\ParcelTrap;
-use ParcelTrap\AusPost\AusPost;
 
 function getMockAusPost($app, array $trackingDetails)
 {
@@ -51,7 +51,7 @@ it('can retrieve the AusPost driver from ParcelTrap', function () {
 });
 
 it('can call `find` on the AusPost driver and handle invalid tracking ID response', function () {
-    $trackingDetails =  [
+    $trackingDetails = [
         'tracking_results' => [
             [
                 'tracking_id' => '7XX1000',
@@ -78,7 +78,7 @@ it('can call `find` on the AusPost driver and handle invalid tracking ID respons
 });
 
 it('can call `find` on the AusPost driver and handle a successful response', function () {
-    $trackingDetails =  [
+    $trackingDetails = [
         'tracking_results' => [
             [
                 'tracking_id' => '7XX1000634011427',
@@ -91,42 +91,42 @@ it('can call `find` on the AusPost driver and handle a successful response', fun
                             [
                                 'location' => 'ALEXANDRIA NSW',
                                 'description' => 'Delivered',
-                                'date' => '2014-05-30T14:43:09+10:00'
+                                'date' => '2014-05-30T14:43:09+10:00',
                             ],
                             [
                                 'location' => 'ALEXANDRIA NSW',
                                 'description' => 'With Australia Post for delivery today',
-                                'date' => '2014-05-30T06:08:51+10:00'
+                                'date' => '2014-05-30T06:08:51+10:00',
                             ],
                             [
                                 'location' => 'CHULLORA NSW',
                                 'description' => 'Processed through Australia Post facility',
-                                'date' => '2014-05-29T19:40:19+10:00'
+                                'date' => '2014-05-29T19:40:19+10:00',
                             ],
                             [
                                 'location' => 'SYDNEY (AU)',
                                 'description' => 'Arrived at facility in destination country',
-                                'date' => '2014-05-29T10:16:00+10:00'
+                                'date' => '2014-05-29T10:16:00+10:00',
                             ],
                             [
                                 'location' => 'JOHN F. KENNEDY APT\/NEW YORK (US)',
                                 'description' => 'Departed facility',
-                                'date' => '2014-05-26T05:00:00+10:00'
+                                'date' => '2014-05-26T05:00:00+10:00',
                             ],
                             [
                                 'location' => 'JOHN F. KENNEDY APT\/NEW YORK (US)',
                                 'description' => 'Departed facility',
-                                'date' => '2014-05-26T05:00:00+10:00'
+                                'date' => '2014-05-26T05:00:00+10:00',
                             ],
                             [
                                 'description' => 'Shipping information approved by Australia Post',
-                                'date' => '2014-05-23T14:27:15+10:00'
-                            ]
+                                'date' => '2014-05-23T14:27:15+10:00',
+                            ],
                         ],
-                        'status' => 'Delivered'
-                    ]
-                ]
-            ]
+                        'status' => 'Delivered',
+                    ],
+                ],
+            ],
         ],
     ];
 
@@ -152,15 +152,15 @@ it('can call `find` on the AusPost driver and handle a consignment response', fu
                         [
                             'location' => 'MEL',
                             'description' => 'Item Delivered',
-                            'date' => '2017-09-18T14:35:07+10:00'
+                            'date' => '2017-09-18T14:35:07+10:00',
                         ],
                         [
                             'location' => 'MEL',
                             'description' => 'On Board for Delivery',
-                            'date' => '2017-09-18T09:50:05+10:00'
-                        ]
+                            'date' => '2017-09-18T09:50:05+10:00',
+                        ],
                     ],
-                    'status' => 'Delivered in Full'
+                    'status' => 'Delivered in Full',
                 ],
                 'trackable_items' => [
                     [
@@ -170,24 +170,24 @@ it('can call `find` on the AusPost driver and handle a consignment response', fu
                             [
                                 'location' => 'MEL',
                                 'description' => 'On Board for Delivery',
-                                'date' => '2017-09-18T09:16:01+10:00'
+                                'date' => '2017-09-18T09:16:01+10:00',
                             ],
                             [
                                 'location' => 'TRA',
                                 'description' => 'Freight Handling',
-                                'date' => '2017-09-15T16:33:29+10:00'
+                                'date' => '2017-09-15T16:33:29+10:00',
                             ],
                             [
                                 'location' => 'TRA',
                                 'description' => 'Picked Up',
-                                'date' => '2017-09-15T09:04:05+10:00'
-                            ]
+                                'date' => '2017-09-15T09:04:05+10:00',
+                            ],
                         ],
-                        'status' => 'Item Delivered'
-                    ]
-                ]
-            ]
-        ]
+                        'status' => 'Item Delivered',
+                    ],
+                ],
+            ],
+        ],
     ];
 
     getMockAusPost($this->app, $trackingDetails);
@@ -201,7 +201,6 @@ it('can call `find` on the AusPost driver and handle a consignment response', fu
         ->estimatedDelivery->toBeNull()
         ->raw->toBe($trackingDetails);
 });
-
 
 it('can call `find` on the AusPost driver and handle a nested response', function () {
     $trackingDetails = [
@@ -220,34 +219,34 @@ it('can call `find` on the AusPost driver and handle a nested response', functio
                                     [
                                         'location' => 'LIGHTSVIEW SA',
                                         'description' => 'Delivered - Left in a safe place',
-                                        'date' => '2020-12-29T11:04:08+11:00'
+                                        'date' => '2020-12-29T11:04:08+11:00',
                                     ],
                                     [
                                         'location' => 'REGENCY PARK SA',
                                         'description' => 'Onboard for delivery',
-                                        'date' => '2020-12-29T07:36:39+11:00'
+                                        'date' => '2020-12-29T07:36:39+11:00',
                                     ],
                                     [
                                         'location' => 'ADELAIDE (AU)',
                                         'description' => 'Received by Australia Post for transportation to processing facility',
-                                        'date' => '2020-12-22T17:52:00+11:00'
+                                        'date' => '2020-12-22T17:52:00+11:00',
                                     ],
                                     [
                                         'description' => 'Shipping information approved by Australia Post',
-                                        'date' => '2020-12-16T03:15:58+11:00'
+                                        'date' => '2020-12-16T03:15:58+11:00',
                                     ],
                                     [
                                         'description' => 'Shipping information received by Australia Post',
-                                        'date' => '2020-12-15T23:59:32+11:00'
-                                    ]
+                                        'date' => '2020-12-15T23:59:32+11:00',
+                                    ],
                                 ],
-                                'status' => 'Delivered'
-                            ]
-                        ]
-                    ]
-                ]
-            ]
-        ]
+                                'status' => 'Delivered',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ],
     ];
 
     getMockAusPost($this->app, $trackingDetails);
@@ -262,7 +261,6 @@ it('can call `find` on the AusPost driver and handle a nested response', functio
         ->raw->toBe($trackingDetails);
 });
 
-
 it('can call `find` on the AusPost driver and handle another response format cause it changes a lot for some reason', function () {
     $trackingDetails = [
         'tracking_results' => [
@@ -273,20 +271,20 @@ it('can call `find` on the AusPost driver and handle another response format cau
                         [
                             'location' => 'PER',
                             'description' => 'Delivered',
-                            'date' => '2020-12-17T11:58:17+11:00'
+                            'date' => '2020-12-17T11:58:17+11:00',
                         ],
                         [
                             'location' => 'PER',
                             'description' => 'On Board for Delivery',
-                            'date' => '2020-12-17T09:24:25+11:00'
+                            'date' => '2020-12-17T09:24:25+11:00',
                         ],
                         [
                             'location' => 'PER',
                             'description' => 'Scanned in Transit',
-                            'date' => '2020-12-16T17:23:30+11:00'
-                        ]
+                            'date' => '2020-12-16T17:23:30+11:00',
+                        ],
                     ],
-                    'status' => 'Delivered in Full'
+                    'status' => 'Delivered in Full',
                 ],
                 'trackable_items' => [
                     [
@@ -296,34 +294,34 @@ it('can call `find` on the AusPost driver and handle another response format cau
                             [
                                 'location' => 'PER',
                                 'description' => 'On Board for Delivery',
-                                'date' => '2020-12-17T09:24:24+11:00'
+                                'date' => '2020-12-17T09:24:24+11:00',
                             ],
                             [
                                 'location' => 'PER',
                                 'description' => 'Freight Handling',
-                                'date' => '2020-12-17T09:15:40+11:00'
+                                'date' => '2020-12-17T09:15:40+11:00',
                             ],
                             [
                                 'location' => 'PER',
                                 'description' => 'Freight Handling',
-                                'date' => '2020-12-17T02:35:36+11:00'
+                                'date' => '2020-12-17T02:35:36+11:00',
                             ],
                             [
                                 'location' => 'PER',
                                 'description' => 'Freight Handling',
-                                'date' => '2020-12-16T17:23:30+11:00'
+                                'date' => '2020-12-16T17:23:30+11:00',
                             ],
                             [
                                 'location' => 'PER',
                                 'description' => 'Picked Up',
-                                'date' => '2020-12-16T13:13:31+11:00'
-                            ]
+                                'date' => '2020-12-16T13:13:31+11:00',
+                            ],
                         ],
-                        'status' => 'Item Delivered'
-                    ]
-                ]
-            ]
-        ]
+                        'status' => 'Item Delivered',
+                    ],
+                ],
+            ],
+        ],
     ];
 
     getMockAusPost($this->app, $trackingDetails);

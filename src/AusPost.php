@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ParcelTrap\AusPost;
 
-use DateTimeImmutable;
 use GrahamCampbell\GuzzleFactory\GuzzleFactory;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\RequestOptions;
@@ -221,7 +220,7 @@ class AusPost implements Driver
     private function getHeaders(array $headers = []): array
     {
         return array_merge([
-            'Authorization' => 'Basic ' . base64_encode($this->apiKey . ':' . $this->password),
+            'Authorization' => 'Basic '.base64_encode($this->apiKey.':'.$this->password),
             'Account-Number' => $this->accountNumber,
             'Accept' => 'application/json',
         ], $headers);
