@@ -10,9 +10,11 @@ use ParcelTrap\AusPost\AusPost;
 use ParcelTrap\Contracts\Factory;
 use ParcelTrap\DTOs\TrackingDetails;
 use ParcelTrap\Enums\Status;
+use ParcelTrap\Exceptions\ApiAuthenticationFailedException;
+use ParcelTrap\Exceptions\ApiLimitReachedException;
 use ParcelTrap\ParcelTrap;
 
-function getMockAusPost($app, array $trackingDetails)
+function getMockAusPost($app, array $trackingDetails): void
 {
     $httpMockHandler = new MockHandler([
         new Response(200, ['Content-Type' => 'application/json'], json_encode($trackingDetails)),
@@ -335,3 +337,102 @@ it('can call `find` on the AusPost driver and handle another response format cau
         ->estimatedDelivery->toBeNull()
         ->raw->toBe($trackingDetails);
 });
+
+it('can handle a 429 error response', function () {
+    $tooManyRequests = [
+        'errors' => [
+            [
+                'message' => 'Too many requests',
+                'error_code' => 'API_002',
+                'error_name' => 'Too many requests',
+            ]
+        ]
+    ];
+
+    $httpMockHandler = new MockHandler([
+        new Response(429, ['Content-Type' => 'application/json'], json_encode($tooManyRequests)),
+    ]);
+
+    $handlerStack = HandlerStack::create($httpMockHandler);
+
+    $httpClient = new Client([
+        'handler' => $handlerStack,
+    ]);
+
+    $this->app->make(Factory::class)->extend(AusPost::IDENTIFIER, fn () => new AusPost(
+        apiKey: 'abcdefg',
+        password: 'test',
+        accountNumber: 'abc123',
+        client: $httpClient,
+    ));
+
+    $this->app->make(Factory::class)
+        ->driver(AusPost::IDENTIFIER)
+        ->find('I3XX00123456');
+})->throws(ApiLimitReachedException::class, 'The API limit of 10 requests per minute has been reached for the AusPost driver');
+
+it('can handle a 200 response with 429 payload', function () {
+    $tooManyRequests = [
+        'errors' => [
+            [
+                'message' => 'Too many requests',
+                'error_code' => 'API_002',
+                'error_name' => 'Too many requests',
+            ]
+        ]
+    ];
+
+    $httpMockHandler = new MockHandler([
+        new Response(200, ['Content-Type' => 'application/json'], json_encode($tooManyRequests)),
+    ]);
+
+    $handlerStack = HandlerStack::create($httpMockHandler);
+
+    $httpClient = new Client([
+        'handler' => $handlerStack,
+    ]);
+
+    $this->app->make(Factory::class)->extend(AusPost::IDENTIFIER, fn () => new AusPost(
+        apiKey: 'abcdefg',
+        password: 'test',
+        accountNumber: 'abc123',
+        client: $httpClient,
+    ));
+
+    $this->app->make(Factory::class)
+        ->driver(AusPost::IDENTIFIER)
+        ->find('I3XX00123456');
+})->throws(ApiLimitReachedException::class, 'The API limit of 10 requests per minute has been reached for the AusPost driver');
+
+it('can handle a 403 error response', function () {
+    $tooManyRequests = [
+        'errors' => [
+            [
+                'message' => 'Undocumented unauthorised error',
+                'error_code' => 'API_000',
+                'error_name' => 'Unauthorised request',
+            ]
+        ]
+    ];
+
+    $httpMockHandler = new MockHandler([
+        new Response(403, ['Content-Type' => 'application/json'], json_encode($tooManyRequests)),
+    ]);
+
+    $handlerStack = HandlerStack::create($httpMockHandler);
+
+    $httpClient = new Client([
+        'handler' => $handlerStack,
+    ]);
+
+    $this->app->make(Factory::class)->extend(AusPost::IDENTIFIER, fn () => new AusPost(
+        apiKey: 'abcdefg',
+        password: 'test',
+        accountNumber: 'abc123',
+        client: $httpClient,
+    ));
+
+    $this->app->make(Factory::class)
+        ->driver(AusPost::IDENTIFIER)
+        ->find('I3XX00123456');
+})->throws(ApiAuthenticationFailedException::class, 'The API authentication failed for the AusPost driver');
