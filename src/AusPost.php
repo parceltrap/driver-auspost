@@ -10,12 +10,18 @@ use GuzzleHttp\RequestOptions;
 use ParcelTrap\Contracts\Driver;
 use ParcelTrap\DTOs\TrackingDetails;
 use ParcelTrap\Enums\Status;
+use ParcelTrap\Exceptions\ApiAuthenticationFailedException;
+use ParcelTrap\Exceptions\ApiLimitReachedException;
 
 class AusPost implements Driver
 {
     public const IDENTIFIER = 'auspost';
 
     public const BASE_URI = 'https://digitalapi.auspost.com.au';
+
+    public const API_LIMIT_PERIOD = 'minute';
+
+    public const API_LIMIT_PER_PERIOD = 10;
 
     private ClientInterface $client;
 
@@ -26,10 +32,31 @@ class AusPost implements Driver
 
     public function find(string $identifier, array $parameters = []): TrackingDetails
     {
+        // find() only supports returning a single TrackingDetails object so we can only search for one
+        if (str_contains($identifier, ',')) {
+            $identifier = substr($identifier, 0, strpos($identifier, ','));
+        }
+
         $response = $this->client->request('GET', '/shipping/v1/track', [
             RequestOptions::HEADERS => $this->getHeaders(),
             RequestOptions::QUERY => array_merge(['tracking_ids' => $identifier], $parameters),
         ]);
+
+        // No documentation on the API, so this is a guess
+        if (in_array($response->getStatusCode(), [401, 403])) {
+            throw new ApiAuthenticationFailedException(
+                driver: $this,
+            );
+        }
+
+        // Aus Post limit the API to 10 requests per minute
+        if ($response->getStatusCode() === 429) {
+            throw new ApiLimitReachedException(
+                driver: $this,
+                limit: static::API_LIMIT_PER_PERIOD,
+                period: static::API_LIMIT_PERIOD,
+            );
+        }
 
         /** @var array $json */
         $json = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
@@ -38,16 +65,18 @@ class AusPost implements Driver
         $result = $json['tracking_results'][0] ?? null;
 
         // Extract the status and error codes where applicable
-        $statusCode = (
+        $statusCode = strtolower(
             $result['status'] ?? (
                 $result['consignment']['status'] ?? (
                     $result['trackable_items'][0]['items'][0]['status'] ?? 'unknown'
                 )
             )
         );
-
-        $statusCode = strtolower($statusCode);
-        $errorCode = strtolower($result['errors'][0]['code'] ?? 'unknown');
+        $errorCode = strtolower(
+            $result['errors'][0]['code'] ?? (
+                $result['errors'][0]['error_code'] ?? 'unknown'
+            )
+        );
 
         // Convert the status code to a ParcelTrap status
         $status = $this->mapStatus($statusCode);
@@ -55,6 +84,15 @@ class AusPost implements Driver
 
         // If error code is known, convert it to a ParcelTrap status
         if ($errorCode !== null) {
+            // Fail safe in case the API does not return 429 when the limit is reached
+            if ($errorCode === 'API_002') {
+                throw new ApiLimitReachedException(
+                    driver: $this,
+                    limit: static::API_LIMIT_PER_PERIOD,
+                    period: static::API_LIMIT_PERIOD,
+                );
+            }
+
             $status = $this->mapErrorCodeToStatus($errorCode) ?? $status;
             $summary = $this->mapErrorCodeToSummary($errorCode) ?? $summary;
         }

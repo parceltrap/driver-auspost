@@ -24,6 +24,8 @@ Add the following to the `drivers` section of your `config/parceltrap.php` file:
 ```
 'auspost' => [
     'api_key' => env('PARCELTRAP_AUSPOST_API_KEY'),
+    'password' => env('PARCELTRAP_AUSPOST_PASSWORD'),
+    'account_number' => env('PARCELTRAP_AUSPOST_ACCOUNT_NUMBER'),
 ],
 ```
 
@@ -31,7 +33,10 @@ Add the following to the `drivers` section of your `config/parceltrap.php` file:
 use ParcelTrap\ParcelTrap;
 
 /** @var ParcelTrap $parcelTrap */
-$parcelTrap->driver('auspost');
+$auspost = $parcelTrap->driver('auspost');
+
+$details = $auspost->find('ABC123');
+echo $details->status->description(); // Not Found, Delivered, etc
 ```
 
 Configure the relevant environment variables in your `.env` file.
@@ -50,6 +55,8 @@ composer test
 
 Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
 
+We encourage people to come forward with fixes and general improvements. If you fork this repo to provide a fix, please open an issue or PR with reference to your changes. This driver was built off of the documentation provided by AusPost without any real testing, due to being unable to acquire sandbox/test access.
+
 ## Security
 
 If you discover any security related issues, please email security@voke.dev instead of using the issue tracker.
@@ -57,6 +64,7 @@ If you discover any security related issues, please email security@voke.dev inst
 ## Credits
 
 - [Owen Voke][link-author]
+- [Bradie Tilley][link-author2]
 - [All Contributors][link-contributors]
 
 ## License
@@ -87,4 +95,5 @@ Read more about Treeware at [treeware.earth][link-treeware].
 [link-treeware]: https://treeware.earth
 [link-treeware-gifting]: https://ecologi.com/owenvoke?gift-trees
 [link-author]: https://github.com/owenvoke
+[link-author2]: https://github.com/bradietilley
 [link-contributors]: ../../contributors
