@@ -111,6 +111,7 @@ class AusPost implements Driver
     private function mapStatus(string $status): Status
     {
         return match ($status) {
+            // Australia Post Article
             'created' => Status::Pending,
             'sealed' => Status::Pending,
             'initiated' => Status::Pre_Transit,
@@ -125,6 +126,7 @@ class AusPost implements Driver
             'cannot be delivered' => Status::Failure,
             'track items for detailed delivery information' => Status::Unknown,
 
+            // StarTrack Consignment
             'at delivery depot' => Status::Pre_Transit,
             'booked in' => Status::Pending,
             'confirmed' => Status::Pending,
@@ -144,6 +146,7 @@ class AusPost implements Driver
             'unconfirmed' => Status::Pre_Transit,
             'unsuccessful delivery' => Status::Failure,
 
+            // StarTrack Freight Item
             'at delivery depot' => Status::Pre_Transit,
             'booked in' => Status::Pending,
             'confirmed' => Status::Pre_Transit,
@@ -167,6 +170,7 @@ class AusPost implements Driver
     private function mapStatusToSummary(string $status): string
     {
         return match ($status) {
+            // Australia Post Article
             'created' => 'The item or items in the shipment have been created, but have not been finalised in an order.',
             'sealed' => 'The shipment has been added to an order.',
             'initiated' => 'The item or items in the shipment have been finalised in an order and will be delivered when the parcels are received by Australia Post.',
@@ -181,6 +185,7 @@ class AusPost implements Driver
             'cannot be delivered' => 'The item or items in the shipment cannot be delivered as addressed.',
             'track items for detailed delivery information' => 'A shipment level delivery summary cannot be determined, as the items in the shipment are at differing delivery statuses. Track the individual items in the shipment for detailed delivery information.',
 
+            // StarTrack Consignment
             'at delivery depot' => 'Consignment is at carrier depot closest to receiver.',
             'booked in' => 'Consignment is at carrier depot closest to receiver.',
             'confirmed' => 'Sender has provided consignment information to carrier in preparation for shipment.',
@@ -200,6 +205,7 @@ class AusPost implements Driver
             'unconfirmed' => 'Sender has completed consignment information for carrier in preparation for shipment but has not yet finalised the consignment.',
             'unsuccessful delivery' => 'Consignment could not be delivered.',
 
+            // StarTrack Freight Item
             'at delivery depot' => 'Freight item is at carrier depot closest to receiver.',
             'booked in' => 'Freight item held at carrier depot closest to receiver until a date and time authorised by receiver.',
             'confirmed' => 'Sender has provided consignment information to carrier in preparation for shipment.',
