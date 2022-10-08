@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
@@ -436,3 +437,27 @@ it('can handle a 403 error response', function () {
         ->driver(AusPost::IDENTIFIER)
         ->find('I3XX00123456');
 })->throws(ApiAuthenticationFailedException::class, 'The API authentication failed for the AusPost driver');
+
+it('can handle generic client exceptions', function () {
+    $httpMockHandler = new MockHandler([
+        new Response(419, ['Content-Type' => 'application/json'], json_encode([])),
+    ]);
+
+    $handlerStack = HandlerStack::create($httpMockHandler);
+
+    $httpClient = new Client([
+        'handler' => $handlerStack,
+    ]);
+
+    $this->app->make(Factory::class)->extend(AusPost::IDENTIFIER, fn () => new AusPost(
+        apiKey: 'abcdefg',
+        password: 'test',
+        accountNumber: 'abc123',
+        client: $httpClient,
+    ));
+
+    $this->app->make(Factory::class)
+        ->driver(AusPost::IDENTIFIER)
+        ->find('I3XX00123456');
+})->throws(ClientException::class, 'Client error: `GET /shipping/v1/track?tracking_ids=I3XX00123456` resulted in a `419 ` response:
+[]');
