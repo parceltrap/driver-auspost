@@ -456,8 +456,16 @@ it('can handle generic client exceptions', function () {
         client: $httpClient,
     ));
 
-    $this->app->make(Factory::class)
-        ->driver(AusPost::IDENTIFIER)
-        ->find('I3XX00123456');
-})->throws(ClientException::class, 'Client error: `GET /shipping/v1/track?tracking_ids=I3XX00123456` resulted in a `419 ` response:
-[]');
+    $exception = null;
+    try {
+        $this->app->make(Factory::class)
+            ->driver(AusPost::IDENTIFIER)
+            ->find('I3XX00123456');
+    } catch (ClientException $exception) {
+    }
+
+    expect($exception)->toBeInstanceOf(ClientException::class)
+        ->and($exception->getCode())->toBe(419)
+        ->and(trim(preg_replace('/[\s\n\r]+/', ' ', $exception->getMessage())))
+            ->toBe('Client error: `GET /shipping/v1/track?tracking_ids=I3XX00123456` resulted in a `419 ` response: []');
+});
