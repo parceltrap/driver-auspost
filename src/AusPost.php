@@ -60,6 +60,8 @@ class AusPost implements Driver
                     previous: $exception,
                 );
             }
+
+            throw $exception;
         }
 
         /** @var array $json */
