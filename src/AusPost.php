@@ -16,17 +16,17 @@ use ParcelTrap\Exceptions\ApiLimitReachedException;
 
 class AusPost implements Driver
 {
-    public const IDENTIFIER = 'auspost';
+    public const string IDENTIFIER = 'auspost';
 
-    public const BASE_URI = 'https://digitalapi.auspost.com.au';
+    public const string BASE_URI = 'https://digitalapi.auspost.com.au';
 
-    public const API_LIMIT_PERIOD = 'minute';
+    public const string API_LIMIT_PERIOD = 'minute';
 
-    public const API_LIMIT_PER_PERIOD = 10;
+    public const int API_LIMIT_PER_PERIOD = 10;
 
     private ClientInterface $client;
 
-    public function __construct(private readonly string $apiKey, private readonly string $password, private readonly string $accountNumber, ?ClientInterface $client = null)
+    public function __construct(private readonly string $apiKey, private readonly string $password, private readonly string $accountNumber, ClientInterface|null $client = null)
     {
         $this->client = $client ?? GuzzleFactory::make(['base_uri' => self::BASE_URI]);
     }
@@ -89,8 +89,8 @@ class AusPost implements Driver
         $summary = $this->mapStatusToSummary($statusCode);
 
         // If error code is known, convert it to a ParcelTrap status
-        if ($errorCode !== null) {
-            // Fail safe in case the API does not return 429 when the limit is reached
+        if ($errorCode !== 'unknown') {
+            // Fail-safe in case the API does not return 429 when the limit is reached
             if ($errorCode === 'api_002') {
                 throw new ApiLimitReachedException(
                     driver: $this,
@@ -231,29 +231,22 @@ class AusPost implements Driver
         };
     }
 
-    private function mapErrorCodeToStatus(string $code): ?Status
+    private function mapErrorCodeToStatus(string $code): Status|null
     {
         return match ($code) {
-            'esb-10001' => Status::Not_Found,
-            'esb-10002' => Status::Not_Found,
-            'esb-20010' => Status::Failure,
-            'esb-20050' => Status::Failure,
-            '51100' => Status::Failure,
-            '51101' => Status::Unknown,
-            '51102' => Status::Unknown,
-            '51103' => Status::Unknown,
-            '51104' => Status::Not_Found,
+            'esb-10001', 'esb-10002', '51104' => Status::Not_Found,
+            'esb-20010', '51100', 'esb-20050' => Status::Failure,
+            '51101', '51102', '51103' => Status::Unknown,
             default => null,
         };
     }
 
-    private function mapErrorCodeToSummary(string $code): ?string
+    private function mapErrorCodeToSummary(string $code): string|null
     {
         return match ($code) {
             'esb-10001' => 'Invalid Tracking ID: The requested consignment could not be found.',
             'esb-10002' => 'Product Not Trackable: The query article or query consignment call identified that the article or consignment respectively is not trackable.',
-            'esb-20010' => 'System Error: An internal technical error occurred.',
-            'esb-20050' => 'System Error: An internal technical error occurred.',
+            'esb-20010', 'esb-20050' => 'System Error: An internal technical error occurred.',
             '51100' => 'Tracking ID Missing: The request must contain at least one tracking id.',
             '51101' => 'Too many AP tracking IDs: The request must contain 10 or less AP article ids, consignment ids, or barcode ids.',
             '51102' => 'Too many SP tracking IDs: The request must contain 10 or less StarTrack consignment ids.',

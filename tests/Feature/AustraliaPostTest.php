@@ -467,5 +467,5 @@ it('can handle generic client exceptions', function () {
     expect($exception)->toBeInstanceOf(ClientException::class)
         ->and($exception->getCode())->toBe(419)
         ->and(trim(preg_replace('/[\s\n\r]+/', ' ', $exception->getMessage())))
-            ->toBe('Client error: `GET /shipping/v1/track?tracking_ids=I3XX00123456` resulted in a `419 ` response: []');
+        ->toBe('Client error: `GET /shipping/v1/track?tracking_ids=I3XX00123456` resulted in a `419 ` response: []');
 });

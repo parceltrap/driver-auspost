@@ -11,21 +11,16 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.1
-          extensions: zip
-          tools: composer
+          php-version: 8.4
           coverage: none
 
-      - name: Install PHP dependencies
-        uses: ramsey/composer-install@v1
-        with:
-          dependency-versions: highest
-          composer-options: "--prefer-dist"
+      - name: Install Dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress --ansi
 
       - name: Run Pint
         run: vendor/bin/pint --test --ansi
@@ -33,25 +28,20 @@ jobs:
   phpstan:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        dependency-version: [prefer-lowest, prefer-stable]
-
-    name: PHPStan (${{ matrix.dependency-version }})
+    name: PHPStan
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.1
-          tools: composer
+          php-version: 8.4
           coverage: none
 
       - name: Install Dependencies
-        run: composer update --${{ matrix.dependency-version }} --no-interaction --prefer-dist --no-progress --ansi
+        run: composer update --no-interaction --prefer-dist --no-progress --ansi
 
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse --no-progress --ansi
